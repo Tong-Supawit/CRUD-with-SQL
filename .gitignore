@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# dotenv environment variables file
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage directory used by testing tools
+coverage/
+
+# npm debug file
+npm-debug.log*
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Parcel cache
+.cache/
+
+# Build output directory
+build/
+
+# Client-specific (React, etc.)
+/Client/node_modules/
+/Client/build/
+/Client/.env
+
+# Server-specific
+/Server/node_modules/
+/Server/logs/
+/Server/.env
