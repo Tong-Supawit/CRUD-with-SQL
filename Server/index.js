@@ -45,7 +45,7 @@ app.post("/login", async(req, res) => {
         const {username, password} = req.body;
         const user = await User.findOne({where : {username}});
         if(!user){
-            return res.status(401).json({message : "Invalid username or password"});
+            return res.status(401).json({message : "Invalid username"});
         }
         const userValidation = await bcrypt.compare(password, user.password);
         if(!userValidation){
@@ -62,6 +62,12 @@ app.post("/login", async(req, res) => {
         console.log("Login Failed!!!", err)
         res.status(401).json({message : "Login Failed..."})
     }
+})
+
+app.post("/logout", (req, res) => {;
+    res.clearCookie("token");
+    res.status(200).json({message : "Logout success..."})
+    console.log("Logout success...")
 })
 
 const port = 3000;
