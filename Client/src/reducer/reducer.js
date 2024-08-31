@@ -3,7 +3,7 @@ import { combineReducers } from "redux";
 const initialState = {
     isAuthenticated : false,
     loading : true,
-    user : null,
+    username : null,
     role : null
 };
 
@@ -14,7 +14,7 @@ function authentication (state = initialState, action) {
                 ...state,
                 isAuthenticated  : true,
                 loading : false,
-                user : action.payload.user,
+                username : action.payload.username,
                 role : action.payload.role
             }
         case "SUCCESS" : 
@@ -22,7 +22,7 @@ function authentication (state = initialState, action) {
                 ...state,
                 isAuthenticated  : true,
                 loading : false,
-                user : action.payload.user,
+                username : action.payload.username,
                 role : action.payload.role
             }
         case "AUTHENTICATION_ERROR" :
@@ -31,14 +31,13 @@ function authentication (state = initialState, action) {
                 ...state,
                 isAuthenticated  : false,
                 loading : false,
-                user : null,
+                username : null,
                 role : null
             }
         default : 
             return state;
     }
 }
-
 
 const RootReducer = combineReducers({
     authentication

@@ -1,19 +1,25 @@
 import {Link, useNavigate} from "react-router-dom";
 import axios from "axios";
+import { logoutSubmit } from "../action/action";
+import {useDispatch, useSelector} from "react-redux"
 
 function Nav () {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector(state => state.authentication.isAuthenticated)
 
-    const logoutSubmit = async(e) => {
+    const handleLogout = async(e) => {
         e.preventDefault();
         try{
             const response = await axios.post("http://localhost:3000/logout", {}, {
                 withCredentials : true
             });
             console.log(response)
+            dispatch(logoutSubmit());
             navigate("/");
         }catch(err){
             console.log("Logout Error!!!", err);
+            alert("Logout Error!!!. Please try again.");
         }
     }
 
@@ -26,15 +32,21 @@ function Nav () {
                     <li>
                         <Link to="/dashboard">Dashboard</Link>
                     </li>
-                    <li>
+                    {!isAuthenticated && (
+                        <li>
                         <Link to="/login">Login</Link>
-                    </li>
-                    <li>
+                        </li>
+                )}
+                    {!isAuthenticated && (
+                        <li>
                         <Link to="/register">Register</Link>
-                    </li>
-                    <li>
-                        <button onClick={logoutSubmit} className="nav-link-button">Logout</button>
-                    </li>
+                        </li>
+                    )}
+                    {isAuthenticated && (
+                        <li>
+                        <button onClick={handleLogout} className="nav-link-button">Logout</button>
+                        </li>
+                )}
                 </ul>
             </nav>
     )
