@@ -10,13 +10,6 @@ const initialState = {
 function authentication (state = initialState, action) {
     switch(action.type){
         case "USER_LOADED" : 
-            return{
-                ...state,
-                isAuthenticated  : true,
-                loading : false,
-                username : action.payload.username,
-                role : action.payload.role
-            }
         case "SUCCESS" : 
             return{
                 ...state,

@@ -4,17 +4,21 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jsonwebtoken = require("jsonwebtoken");
+
 const User = require("./User");
 const connectDB = require("./connectDB");
+const { json } = require("sequelize");
 
 const ACCESS_TOKEN_SECRET_KEY = process.env.ACCESS_TOKEN_SECRET_KEY;
 const REFRESH_TOKEN_SECRET_KEY = process.env.REFRESH_TOKEN_SECRET_KEY;
+
 const app = express();
 
 app.use(cors({
     credentials : true,
     origin : "http://localhost:5173"
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -33,7 +37,7 @@ app.post("/register", async (req, res) => {
             email,
             password : hashPassword,
         })
-        res.status(200).json({message : "Register Success...", user});
+        res.status(200).json({message : "Register success...", user});
     }catch(err){
         console.log("Register Failed!!!");
         res.status(400).json({message : "Register Failed!!!"});
@@ -63,7 +67,7 @@ app.post("/login", async(req, res) => {
         )
         res.cookie("accessToken", accessToken, {maxAge : 900000, httpOnly : true, secure : false, sameSite : "lax"});
         res.cookie("refreshToken", refreshToken, {maxAge : 604800000, httpOnly : true, secure : false, sameSite : "lax"});
-        res.status(200).json({message : "Login Success...", username : user.username, role : user.role});
+        res.status(200).json({message : "Login success...", username : user.username, role : user.role});
     }catch(err){
         console.log("Login Failed!!!", err);
         res.status(401).json({message : "Login Failed..."});
@@ -80,18 +84,19 @@ app.post("/logout", (req, res) => {;
 app.get("/checkAuthenticated", async (req, res) => {
     const accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
-    const user = jsonwebtoken.decode(accessToken);
     if(accessToken){
-        return res.status(200).json({message : "Already login...", isAuthenticated : true, user});
+        try{
+            const user = jsonwebtoken.verify(accessToken, ACCESS_TOKEN_SECRET_KEY);
+            return res.status(200).json({message : "Already login...", isAuthenticated : true, user});
+        }catch(err){
+            console.log("Invalid access token", err);
+        }
     }
     if(!refreshToken){
         return res.status(401).json({message : "Not authenticaed"});
     }
     try {
         const user = jsonwebtoken.verify(refreshToken, REFRESH_TOKEN_SECRET_KEY);
-        if(!user){
-            return res.status(401).json({message : "Not authenticaed"});    
-        }
         const newAccessToken = await jsonwebtoken.sign(
             {username : user.username, role : user.role},
             ACCESS_TOKEN_SECRET_KEY,
@@ -108,6 +113,27 @@ app.get("/checkAuthenticated", async (req, res) => {
     }catch(err){
             console.log(err)
             return res.status(401).json({message : "Not authenticaed"});    
+    }
+})
+
+app.get("/getDataUser", async(req, res) => {
+    const accessToken = req.cookies.accessToken;
+    if(!accessToken){
+        return res.status(401).json({message : "Token not found!!!"})
+    }
+    try{
+        const user = jsonwebtoken.verify(accessToken, ACCESS_TOKEN_SECRET_KEY);
+        if(user.role === "admin"){
+            const dataUser = await User.findAll({
+                attributes : ["id", "username", "email"]
+            });
+        res.status(200).json({message : "Fetch data success...", dataUser});
+        }else{
+            throw new Error("Unauthorized access");
+        }
+    }catch(err){
+        res.status(401).json({message : "Not authenticated"});
+        console.log("Authentication error!!!", err);
     }
 })
 

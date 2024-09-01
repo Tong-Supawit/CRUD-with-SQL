@@ -7,6 +7,7 @@ function Nav () {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const isAuthenticated = useSelector(state => state.authentication.isAuthenticated)
+    const role = useSelector(state => state.authentication.role)
 
     const handleLogout = async(e) => {
         e.preventDefault();
@@ -29,24 +30,30 @@ function Nav () {
                     <li>
                         <Link to="/">Home page</Link>
                     </li>
-                    <li>
-                        <Link to="/dashboard">Dashboard</Link>
-                    </li>
-                    {!isAuthenticated && (
+                    {(role === "user" || role === "admin")&& (
                         <li>
-                        <Link to="/login">Login</Link>
-                        </li>
-                )}
-                    {!isAuthenticated && (
-                        <li>
-                        <Link to="/register">Register</Link>
+                            <Link to="/userDashboard">User dashboard</Link>
                         </li>
                     )}
-                    {isAuthenticated && (
+                    {role === "admin" && (
                         <li>
-                        <button onClick={handleLogout} className="nav-link-button">Logout</button>
+                            <Link to="/adminDashboard">Admin dashboard</Link>
                         </li>
-                )}
+                    )}
+                    {!isAuthenticated ? (
+                        <>
+                            <li>
+                                <Link to="/login">Login</Link>
+                            </li>
+                            <li>
+                                <Link to="/register">Register</Link>      
+                            </li>
+                        </>
+                    ) : (
+                        <li>
+                            <button onClick={handleLogout} className="nav-link-button">Logout</button>
+                        </li>
+                    )}
                 </ul>
             </nav>
     )

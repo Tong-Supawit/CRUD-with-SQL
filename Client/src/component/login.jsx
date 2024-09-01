@@ -31,15 +31,16 @@ function Login () {
           hasError = true;
         }
         if (hasError) 
-          throw new Error("Login validation failed!!!");
+          return;
         const response = await axios.post("http://localhost:3000/login", {
           username,
           password
         }, {
             withCredentials : true
         })
-        navigate("/")
-        dispatch(loginSubmit(response.data.message));
+        dispatch(loginSubmit(response.data));
+        console.log(response.data);
+        navigate("/");
       }catch(err){
         setErrorResponse(`${err.response.data.message}`)
         console.log("Error is : " + errorResponse)
@@ -53,14 +54,18 @@ function Login () {
               <br />
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
               {errorUsername && <p style={{color : "red"}}>{errorUsername}</p>}
-              <br />{!errorUsername && <br />}
+              <br />
+              {!errorUsername && <br />}
               <h1>Password : </h1>
               <br />
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
               {errorPassword && <p style={{color : "red"}}>{errorPassword}</p>}
-              <br /><br />{!errorPassword && <br />}
+              <br />
+              <br />
+              {!errorPassword && <br />}
               <button type='submit'>Login</button>
-              <br /><br />
+              <br />
+              <br />
               {errorResponse && <p style={{color : "red"}}>{errorResponse}</p>}
               </div>
           </form>
