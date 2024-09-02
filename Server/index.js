@@ -125,7 +125,7 @@ app.get("/getDataUser", async(req, res) => {
         const user = jsonwebtoken.verify(accessToken, ACCESS_TOKEN_SECRET_KEY);
         if(user.role === "admin"){
             const dataUser = await User.findAll({
-                attributes : ["id", "username", "email"]
+                attributes : ["id", "username", "email", "role"]
             });
         res.status(200).json({message : "Fetch data success...", dataUser});
         }else{
@@ -134,6 +134,23 @@ app.get("/getDataUser", async(req, res) => {
     }catch(err){
         res.status(401).json({message : "Not authenticated"});
         console.log("Authentication error!!!", err);
+    }
+})
+
+app.delete("/deleteUser/:id", async(req, res) => {
+    try{
+        const id = req.params.id;
+        if(!id){
+            return res.status(404).json({message : "User not found!!!"})
+        }
+        const userDeleted = await User.destroy({where : {id}})
+        if(userDeleted === 0){
+            return res.status(404).json({message : "Could not delete user!!!"})
+        }
+        res.status(200).json({message : "User is deleted..."})
+    }catch(err){
+        console.log("Failed to delete user!!!", err)
+        res.status(500).json({message : "Internal server error!!!"})
     }
 })
 
