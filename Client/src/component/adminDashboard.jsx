@@ -58,7 +58,6 @@ function AdminDashboard () {
                         <td>role : {user.role}</td>
                         <td>username : {user.username}</td>
                         <td>email : {user.email}</td>
-                        <td><button onClick={() => confirm("Modify")}>Modify</button></td>
                         <td><button onClick={() => handleDelete(user.id, user.username, user.role)}>Delete</button></td>
                     </tr>
                 ))}

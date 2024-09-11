@@ -4,6 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jsonwebtoken = require("jsonwebtoken");
+const csurf = require("csurf");
 
 const User = require("./User");
 const connectDB = require("./connectDB");
@@ -51,10 +52,34 @@ app.post("/login", async(req, res) => {
         if(!user){
             return res.status(401).json({message : "Invalid username"});
         }
+        if(user.isLocked){
+            const lockedTime = new Date(user.lockedTime);
+            const currentTime = new Date();
+            const diffMinitues = Math.floor((currentTime - lockedTime) / 1000 / 60) 
+
+            if (diffMinitues >= 15){
+                user.isLocked = false;
+                user.loginAttempts = 0;
+                user.lockedTime = null;
+                await user.save();
+            }else{
+                return res.status(403).json({message : `User is locked please contact admin or try again in ${15 - diffMinitues} minitues`})
+            }
+        }
         const userValidation = await bcrypt.compare(password, user.password);
         if(!userValidation){
-            return res.status(401).json({message : "Invalid password"});
+            user.loginAttempts += 1;
+            if(user.loginAttempts >= 3){
+                user.isLocked = true
+                user.lockedTime = new Date();
+            };
+            await user.save();
+            const message = user.loginAttempts < 3 ? `You have ${3-user.loginAttempts} more chances to log in.` : "User is locked please contact admin or try again in 15 minutes";
+            return res.status(401).json({message : `Invalid password. ${message}`});
         }
+        user.loginAttempts = 0;
+        user.isLocked = false;
+        await user.save();
         const accessToken = await jsonwebtoken.sign(
             {username : user.username, role : user.role},
             ACCESS_TOKEN_SECRET_KEY,
@@ -69,8 +94,32 @@ app.post("/login", async(req, res) => {
         res.cookie("refreshToken", refreshToken, {maxAge : 604800000, httpOnly : true, secure : false, sameSite : "lax"});
         res.status(200).json({message : "Login success...", username : user.username, role : user.role});
     }catch(err){
-        console.log("Login Failed!!!", err);
-        res.status(401).json({message : "Login Failed..."});
+        console.log(err);
+        res.status(500).json({message : "Error from internal server."})
+    }
+})
+
+app.put("/updateUser", async (req, res) => {
+    try{
+        const accessToken = req.cookies.accessToken;
+        const {password, newPassword} = req.body;
+        if(accessToken){
+            const userFromToken = jsonwebtoken.verify(accessToken, ACCESS_TOKEN_SECRET_KEY);
+            const user = await User.findOne({where : {username : userFromToken.username}})
+            const passwordValidation = await bcrypt.compare(password, user.password);
+            if(passwordValidation){
+                const hashNewPassword = await bcrypt.hash(newPassword, 10);
+                user.password = hashNewPassword;
+                await user.save();
+                res.status(200).json({message : "Complete to change password"});
+            }else{
+                return res.status(401).json({message : "Invalid current password"});
+            }
+        }else{
+            return res.status(401).json({message : "Token not found!!!"})
+        }
+    }catch(err){
+        return res.status(500).json({message : "Cound not update, due to internal server error!!!"})
     }
 })
 

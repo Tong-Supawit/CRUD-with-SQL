@@ -25,6 +25,20 @@ const User = sequelize.define("User", {
         type : DataTypes.ENUM("admin", "user"),
         allowNull : true,
         defaultValue : "user"
+    },
+    loginAttempts : {
+        type : DataTypes.INTEGER,
+        allowNull : false,
+        defaultValue : 0
+    },
+    isLocked : {
+        type : DataTypes.BOOLEAN,
+        allowNull : false,
+        defaultValue : false
+    },
+    lockedTime : {
+        type : DataTypes.DATE,
+        allowNull : true,
     }
 })
 
